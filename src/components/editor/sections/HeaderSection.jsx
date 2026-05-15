@@ -1,5 +1,6 @@
 import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
+import SectionTranslate from "@/components/editor/SectionTranslate";
 
 const CONTACT_FIELDS = [
   { key: "location", label: "Location" },
@@ -10,7 +11,7 @@ const CONTACT_FIELDS = [
   { key: "portfolio", label: "Portfolio" },
 ];
 
-export default function HeaderSection({ cv, setCv }) {
+export default function HeaderSection({ cv, setCv, translate }) {
   const updateField = (key, value) =>
     setCv((prev) => ({ ...prev, [key]: value }));
   const updateContact = (key, value) =>
@@ -18,6 +19,9 @@ export default function HeaderSection({ cv, setCv }) {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-start">
+        <SectionTranslate section="header" translate={translate} />
+      </div>
       <div className="grid gap-3">
         <Input
           label="Name"

@@ -1,9 +1,10 @@
 import Button from "@/components/ui/Button";
 import EntryCard from "@/components/editor/EntryCard";
 import Input from "@/components/ui/Input";
+import SectionTranslate from "@/components/editor/SectionTranslate";
 import Textarea from "@/components/ui/Textarea";
 
-export default function SkillsSection({ cv, setCv }) {
+export default function SkillsSection({ cv, setCv, translate }) {
   const rename = (oldName, newName) =>
     setCv((prev) => {
       if (newName === oldName) return prev;
@@ -37,7 +38,8 @@ export default function SkillsSection({ cv, setCv }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <SectionTranslate section="skills" translate={translate} />
         <Button variant="ghost" onClick={add}>
           + Add category
         </Button>

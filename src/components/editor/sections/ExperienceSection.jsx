@@ -2,9 +2,10 @@ import Button from "@/components/ui/Button";
 import EntryCard from "@/components/editor/EntryCard";
 import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
+import SectionTranslate from "@/components/editor/SectionTranslate";
 import Textarea from "@/components/ui/Textarea";
 
-export default function ExperienceSection({ cv, setCv }) {
+export default function ExperienceSection({ cv, setCv, translate }) {
   const updateJob = (i, key, value) =>
     setCv((prev) => ({
       ...prev,
@@ -53,7 +54,8 @@ export default function ExperienceSection({ cv, setCv }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <SectionTranslate section="experience" translate={translate} />
         <Button variant="ghost" onClick={addJob}>
           + Add experience
         </Button>

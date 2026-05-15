@@ -1,8 +1,9 @@
 import Button from "@/components/ui/Button";
 import EntryCard from "@/components/editor/EntryCard";
 import Input from "@/components/ui/Input";
+import SectionTranslate from "@/components/editor/SectionTranslate";
 
-export default function EducationSection({ cv, setCv }) {
+export default function EducationSection({ cv, setCv, translate }) {
   const update = (i, key, value) =>
     setCv((prev) => ({
       ...prev,
@@ -26,7 +27,8 @@ export default function EducationSection({ cv, setCv }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <SectionTranslate section="education" translate={translate} />
         <Button variant="ghost" onClick={add}>
           + Add education
         </Button>

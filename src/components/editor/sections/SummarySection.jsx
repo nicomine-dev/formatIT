@@ -1,8 +1,9 @@
 import Button from "@/components/ui/Button";
 import Label from "@/components/ui/Label";
+import SectionTranslate from "@/components/editor/SectionTranslate";
 import Textarea from "@/components/ui/Textarea";
 
-export default function SummarySection({ cv, setCv }) {
+export default function SummarySection({ cv, setCv, translate }) {
   const update = (i, value) =>
     setCv((prev) => ({
       ...prev,
@@ -18,7 +19,8 @@ export default function SummarySection({ cv, setCv }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <SectionTranslate section="summary" translate={translate} />
         <Button variant="ghost" onClick={add}>
           + Add paragraph
         </Button>
