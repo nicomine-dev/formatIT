@@ -1,5 +1,5 @@
-import CVEditor from '@/components/CVEditor';
+import EditorShell from "@/components/editor/EditorShell";
 
 export default function Home() {
-  return <CVEditor />;
+  return <EditorShell />;
 }
