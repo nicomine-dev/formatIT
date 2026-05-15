@@ -1,47 +1,76 @@
 function Section({ title, children }) {
   return (
-    <section className="mt-6">
-      <h2 className="border-b border-zinc-300 pb-1 text-sm font-bold uppercase tracking-wider text-blue-700">
+    <section className="mt-4">
+      <h2 className="border-b border-zinc-300 pb-1 text-[13px] font-bold uppercase tracking-wider text-blue-700">
         {title}
       </h2>
-      <div className="mt-3 space-y-4">{children}</div>
+      <div className="mt-2 space-y-3">{children}</div>
     </section>
+  );
+}
+
+function toHref(field, value) {
+  if (!value) return null;
+  const v = value.trim();
+  if (!v) return null;
+
+  switch (field) {
+    case 'email':
+      return v.startsWith('mailto:') ? v : `mailto:${v}`;
+    case 'linkedin':
+    case 'github':
+    case 'portfolio': {
+      if (/^https?:\/\//i.test(v)) return v;
+      if (/^[\w.-]+\.[a-z]{2,}/i.test(v)) return `https://${v}`;
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
+function ContactItem({ label, field, value }) {
+  const href = toHref(field, value);
+  return (
+    <li>
+      <span className="font-semibold">{label}:</span>{' '}
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-700 underline-offset-2 hover:underline"
+        >
+          {value}
+        </a>
+      ) : (
+        value
+      )}
+    </li>
   );
 }
 
 export default function CV({ cv }) {
   return (
     <article
-      className="mx-auto my-8 max-w-3xl bg-white px-10 py-10 text-[13px] leading-relaxed text-zinc-900 shadow-sm print:my-0 print:shadow-none"
+      className="bg-white px-[7mm] py-[7mm] text-[12px] leading-normal text-zinc-900"
       aria-label="Curriculum Vitae"
     >
       <header>
-        <h1 className="text-3xl font-bold uppercase tracking-tight text-blue-700">
+        <h1 className="text-2xl font-bold uppercase tracking-tight text-blue-700">
           {cv.name}
         </h1>
-        <p className="mt-1 text-lg font-semibold uppercase tracking-wide text-zinc-800">
+        <p className="mt-1 text-base font-semibold uppercase tracking-wide text-zinc-800">
           {cv.title}
         </p>
 
-        <ul className="mt-3 grid grid-cols-1 gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
-          <li>
-            <span className="font-semibold">Location:</span> {cv.contact.location}
-          </li>
-          <li>
-            <span className="font-semibold">LinkedIn:</span> {cv.contact.linkedin}
-          </li>
-          <li>
-            <span className="font-semibold">Phone:</span> {cv.contact.phone}
-          </li>
-          <li>
-            <span className="font-semibold">GitHub:</span> {cv.contact.github}
-          </li>
-          <li>
-            <span className="font-semibold">Email:</span> {cv.contact.email}
-          </li>
-          <li>
-            <span className="font-semibold">Portfolio:</span> {cv.contact.portfolio}
-          </li>
+        <ul className="mt-2 grid grid-cols-2 gap-x-8 gap-y-1 text-[12px]">
+          <ContactItem label="Location" field="location" value={cv.contact.location} />
+          <ContactItem label="LinkedIn" field="linkedin" value={cv.contact.linkedin} />
+          <ContactItem label="Phone" field="phone" value={cv.contact.phone} />
+          <ContactItem label="GitHub" field="github" value={cv.contact.github} />
+          <ContactItem label="Email" field="email" value={cv.contact.email} />
+          <ContactItem label="Portfolio" field="portfolio" value={cv.contact.portfolio} />
         </ul>
       </header>
 
@@ -84,7 +113,9 @@ export default function CV({ cv }) {
           {Object.entries(cv.skills).map(([category, items]) => (
             <div key={category}>
               <dt className="inline font-bold">{category}:</dt>{' '}
-              <dd className="inline">{items.join(', ')}</dd>
+              <dd className="inline">
+                {Array.isArray(items) ? items.join(', ') : items}
+              </dd>
             </div>
           ))}
         </dl>

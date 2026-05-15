@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import CV from '@/components/CV';
+import { useEffect, useState } from 'react';
+import PaperPreview from '@/components/PaperPreview';
 import { cv as initialCv } from '@/data/cv';
+
+const STORAGE_KEY = 'formatit:cv:v1';
 
 const CONTACT_FIELDS = [
   { key: 'location', label: 'Location' },
@@ -111,6 +113,31 @@ function PrimaryButton({ onClick, children }) {
 export default function CVEditor() {
   const [cv, setCv] = useState(initialCv);
   const [openId, setOpenId] = useState('header');
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) setCv(JSON.parse(stored));
+    } catch (err) {
+      console.warn('[formatIT] failed to read stored CV:', err);
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cv));
+    } catch (err) {
+      console.warn('[formatIT] failed to persist CV:', err);
+    }
+  }, [cv, hydrated]);
+
+  const resetCv = () => {
+    if (!confirm('Reset the CV to the default content? Your current edits will be lost.')) return;
+    setCv(initialCv);
+  };
 
   const updateField = (key, value) =>
     setCv((prev) => ({ ...prev, [key]: value }));
@@ -214,13 +241,7 @@ export default function CVEditor() {
   const updateSkillItems = (category, itemsString) =>
     setCv((prev) => ({
       ...prev,
-      skills: {
-        ...prev.skills,
-        [category]: itemsString
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
-      },
+      skills: { ...prev.skills, [category]: itemsString },
     }));
   const addSkillCategory = () =>
     setCv((prev) => {
@@ -230,7 +251,7 @@ export default function CVEditor() {
         n += 1;
         name = `New Category ${n}`;
       }
-      return { ...prev, skills: { ...prev.skills, [name]: [] } };
+      return { ...prev, skills: { ...prev.skills, [name]: '' } };
     });
   const removeSkillCategory = (category) =>
     setCv((prev) => {
@@ -239,10 +260,74 @@ export default function CVEditor() {
       return { ...prev, skills: next };
     });
 
+  const [downloading, setDownloading] = useState(false);
+
+  const downloadPdf = async () => {
+    if (typeof window === 'undefined') return;
+    setDownloading(true);
+    try {
+      const [{ pdf }, { default: CVPdfDocument }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/CVPdfDocument'),
+      ]);
+      const blob = await pdf(<CVPdfDocument cv={cv} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const sanitize = (s) => (s || '').replace(/[\\/:*?"<>|]+/g, '-').trim();
+      const namePart = sanitize(cv.name) || 'CV';
+      const titlePart = sanitize(cv.title);
+      const fileName = `${namePart}${titlePart ? ` - ${titlePart}` : ''}.pdf`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[formatIT] PDF generation failed:', err);
+      alert('Could not generate the PDF. See the console for details.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col gap-6 bg-zinc-100 p-6 lg:flex-row print:p-0">
+      <button
+        type="button"
+        onClick={downloadPdf}
+        disabled={downloading}
+        className="fixed right-6 top-6 z-50 inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 print:hidden"
+      >
+        <svg
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 4v12" />
+          <path d="m7 11 5 5 5-5" />
+          <path d="M5 20h14" />
+        </svg>
+        {downloading ? 'Generating…' : 'Download PDF'}
+      </button>
       <aside className="w-full shrink-0 rounded-lg bg-white p-6 shadow-sm lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:w-96 lg:overflow-y-auto print:hidden">
-        <h2 className="mb-4 text-lg font-bold text-zinc-900">Edit CV</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-zinc-900">Edit CV</h2>
+          <button
+            type="button"
+            onClick={resetCv}
+            className="text-xs font-medium text-zinc-500 hover:text-red-600"
+          >
+            Reset
+          </button>
+        </div>
 
         <div className="space-y-3">
           <Accordion id="header" title="Header" openId={openId} setOpenId={setOpenId}>
@@ -442,9 +527,9 @@ export default function CVEditor() {
               <PrimaryButton onClick={addSkillCategory}>+ Add category</PrimaryButton>
             </div>
             <div className="space-y-3">
-              {Object.entries(cv.skills).map(([category, items]) => (
+              {Object.entries(cv.skills).map(([category, items], i) => (
                 <EntryCard
-                  key={category}
+                  key={i}
                   title={category}
                   onRemove={() => removeSkillCategory(category)}
                 >
@@ -455,7 +540,7 @@ export default function CVEditor() {
                   />
                   <TextArea
                     label="Items (comma-separated)"
-                    value={items.join(', ')}
+                    value={Array.isArray(items) ? items.join(', ') : items}
                     onChange={(v) => updateSkillItems(category, v)}
                     rows={2}
                   />
@@ -467,7 +552,7 @@ export default function CVEditor() {
       </aside>
 
       <section className="flex-1 print:m-0 print:p-0">
-        <CV cv={cv} />
+        <PaperPreview cv={cv} />
       </section>
     </div>
   );
