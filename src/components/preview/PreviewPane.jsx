@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Button from "@/components/ui/Button";
-import CVMultiPage from "@/components/preview/CVMultiPage";
+import PaperPreview from "@/components/PaperPreview";
 import Label from "@/components/ui/Label";
 
 const DOT_GRID =
@@ -109,7 +109,7 @@ export default function PreviewPane({ cv }) {
             width: "794px",
           }}
         >
-          <CVMultiPage cv={cv} />
+          <PaperPreview cv={cv} />
         </div>
       </div>
     </section>

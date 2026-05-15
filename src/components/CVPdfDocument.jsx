@@ -5,144 +5,95 @@ import {
   Text,
   Link,
   StyleSheet,
-} from "@react-pdf/renderer";
+} from '@react-pdf/renderer';
 
-// Editorial typography — Helvetica family is built into @react-pdf and is the
-// safest ATS-friendly choice. Sizes, spacing and casing mirror the HTML
-// CVPaper so the on-screen preview and the exported PDF read as the same
-// document at a glance.
-
-const INK = "#111111";
-const INK_2 = "#444444";
-const INK_3 = "#666666";
-const RULE = "#1a1a1a";
+const BLUE = '#1d4ed8';
+const ZINC_900 = '#18181b';
+const ZINC_800 = '#27272a';
+const ZINC_300 = '#d4d4d8';
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 64,
-    paddingBottom: 56,
-    paddingHorizontal: 72,
-    fontFamily: "Helvetica",
-    fontSize: 10.5,
-    color: INK,
-    lineHeight: 1.5,
+    paddingHorizontal: '7mm',
+    paddingVertical: '7mm',
+    fontFamily: 'Helvetica',
+    fontSize: 10,
+    color: ZINC_900,
+    lineHeight: 1.4,
   },
   name: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 26,
-    color: INK,
-    letterSpacing: -0.5,
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 20,
+    color: BLUE,
+    textTransform: 'uppercase',
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 11,
-    color: INK_2,
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 12,
+    color: ZINC_800,
+    textTransform: 'uppercase',
+    marginTop: 3,
+    letterSpacing: 0.5,
+  },
+  contactGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     marginTop: 6,
   },
-  contactRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 14,
-    gap: 4,
-  },
   contactItem: {
-    fontSize: 9,
-    color: INK_2,
-    marginRight: 12,
+    width: '50%',
+    paddingRight: 8,
+    marginBottom: 2,
+    fontSize: 10,
+  },
+  contactLabel: {
+    fontFamily: 'Helvetica-Bold',
   },
   link: {
-    color: INK_2,
-    textDecoration: "none",
-  },
-  rule: {
-    borderBottomWidth: 1,
-    borderBottomColor: RULE,
-    marginTop: 22,
-    marginBottom: 18,
+    color: BLUE,
+    textDecoration: 'none',
   },
   section: {
-    marginTop: 14,
+    marginTop: 12,
   },
   sectionTitle: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 10,
-    color: INK,
-    letterSpacing: 1.6,
-    marginBottom: 10,
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 11,
+    color: BLUE,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    borderBottomWidth: 1,
+    borderBottomColor: ZINC_300,
+    paddingBottom: 2,
+    marginBottom: 6,
   },
   paragraph: {
-    marginBottom: 6,
-    fontSize: 10.5,
-    color: INK,
+    marginBottom: 4,
   },
   entry: {
-    marginBottom: 12,
+    marginBottom: 6,
   },
-  entryHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-  },
-  entryRole: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 10.5,
-    color: INK,
-    flex: 1,
-    paddingRight: 12,
-  },
-  entryCompany: {
-    fontFamily: "Helvetica",
-    color: INK_2,
-  },
-  entryDates: {
-    fontSize: 9,
-    color: INK_3,
+  entryTitle: {
+    fontFamily: 'Helvetica-Bold',
+    marginBottom: 2,
   },
   bulletRow: {
-    flexDirection: "row",
-    marginTop: 2,
-    paddingLeft: 12,
+    flexDirection: 'row',
+    marginBottom: 2,
+    paddingLeft: 8,
   },
   bullet: {
     width: 8,
-    color: INK_3,
-    fontSize: 10,
   },
   bulletText: {
     flex: 1,
-    fontSize: 10,
-    color: INK,
-  },
-  eduHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-  },
-  eduMain: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  eduDegree: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 10.5,
-    color: INK,
-  },
-  eduInstitution: {
-    fontSize: 9.5,
-    color: INK_2,
   },
   skillRow: {
-    flexDirection: "row",
-    marginBottom: 4,
-    fontSize: 10,
+    marginBottom: 2,
   },
   skillCategory: {
-    width: 150,
-    fontFamily: "Helvetica-Bold",
-    color: INK,
-  },
-  skillItems: {
-    flex: 1,
-    color: "#333333",
+    fontFamily: 'Helvetica-Bold',
   },
 });
 
@@ -151,11 +102,11 @@ function toHref(field, value) {
   const v = value.trim();
   if (!v) return null;
   switch (field) {
-    case "email":
-      return v.startsWith("mailto:") ? v : `mailto:${v}`;
-    case "linkedin":
-    case "github":
-    case "portfolio": {
+    case 'email':
+      return v.startsWith('mailto:') ? v : `mailto:${v}`;
+    case 'linkedin':
+    case 'github':
+    case 'portfolio': {
       if (/^https?:\/\//i.test(v)) return v;
       if (/^[\w.-]+\.[a-z]{2,}/i.test(v)) return `https://${v}`;
       return null;
@@ -165,11 +116,12 @@ function toHref(field, value) {
   }
 }
 
-function ContactItem({ field, value, last }) {
+function ContactItem({ label, field, value }) {
   if (!value) return null;
   const href = toHref(field, value);
   return (
     <Text style={styles.contactItem}>
+      <Text style={styles.contactLabel}>{label}: </Text>
       {href ? (
         <Link src={href} style={styles.link}>
           {value}
@@ -177,22 +129,20 @@ function ContactItem({ field, value, last }) {
       ) : (
         value
       )}
-      {!last ? "  ·" : ""}
     </Text>
   );
 }
 
-export default function CVPdfDocument({ cv }) {
-  const sectionTitle = (text) => text.toUpperCase();
-  const contacts = [
-    { field: "location", value: cv.contact?.location },
-    { field: "phone", value: cv.contact?.phone },
-    { field: "email", value: cv.contact?.email },
-    { field: "linkedin", value: cv.contact?.linkedin },
-    { field: "github", value: cv.contact?.github },
-    { field: "portfolio", value: cv.contact?.portfolio },
-  ].filter((c) => c.value);
+function Bullet({ children }) {
+  return (
+    <View style={styles.bulletRow}>
+      <Text style={styles.bullet}>•</Text>
+      <Text style={styles.bulletText}>{children}</Text>
+    </View>
+  );
+}
 
+export default function CVPdfDocument({ cv }) {
   return (
     <Document
       title={`${cv.name} - CV`}
@@ -202,108 +152,64 @@ export default function CVPdfDocument({ cv }) {
       <Page size="A4" style={styles.page}>
         <View>
           <Text style={styles.name}>{cv.name}</Text>
-          {cv.title ? <Text style={styles.subtitle}>{cv.title}</Text> : null}
+          <Text style={styles.subtitle}>{cv.title}</Text>
 
-          {contacts.length > 0 && (
-            <View style={styles.contactRow}>
-              {contacts.map((c, i) => (
-                <ContactItem
-                  key={c.field}
-                  field={c.field}
-                  value={c.value}
-                  last={i === contacts.length - 1}
-                />
-              ))}
-            </View>
-          )}
-
-          <View style={styles.rule} />
+          <View style={styles.contactGrid}>
+            <ContactItem label="Location" field="location" value={cv.contact.location} />
+            <ContactItem label="LinkedIn" field="linkedin" value={cv.contact.linkedin} />
+            <ContactItem label="Phone" field="phone" value={cv.contact.phone} />
+            <ContactItem label="GitHub" field="github" value={cv.contact.github} />
+            <ContactItem label="Email" field="email" value={cv.contact.email} />
+            <ContactItem label="Portfolio" field="portfolio" value={cv.contact.portfolio} />
+          </View>
         </View>
 
-        {cv.summary?.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {sectionTitle("Professional Summary")}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Professional Summary</Text>
+          {cv.summary.map((p, i) => (
+            <Text key={i} style={styles.paragraph}>
+              {p}
             </Text>
-            {cv.summary.map((p, i) => (
-              <Text key={i} style={styles.paragraph}>
-                {p}
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Professional Experience</Text>
+          {cv.experience.map((job, i) => (
+            <View key={i} style={styles.entry}>
+              <Text style={styles.entryTitle}>
+                {job.role} | {job.start} - {job.end} | {job.company}
               </Text>
-            ))}
-          </View>
-        )}
+              {job.bullets.map((b, j) => (
+                <Bullet key={j}>{b}</Bullet>
+              ))}
+            </View>
+          ))}
+        </View>
 
-        {cv.experience?.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {sectionTitle("Professional Experience")}
-            </Text>
-            {cv.experience.map((job, i) => (
-              <View key={i} style={styles.entry}>
-                <View style={styles.entryHeader}>
-                  <Text style={styles.entryRole}>
-                    {job.role}
-                    {job.company ? (
-                      <Text style={styles.entryCompany}> · {job.company}</Text>
-                    ) : null}
-                  </Text>
-                  <Text style={styles.entryDates}>
-                    {job.start}
-                    {job.start || job.end ? " – " : ""}
-                    {job.end}
-                  </Text>
-                </View>
-                {job.bullets?.map((b, j) => (
-                  <View key={j} style={styles.bulletRow}>
-                    <Text style={styles.bullet}>•</Text>
-                    <Text style={styles.bulletText}>{b}</Text>
-                  </View>
-                ))}
-              </View>
-            ))}
-          </View>
-        )}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Education</Text>
+          {cv.education.map((ed, i) => (
+            <View key={i} style={styles.entry}>
+              <Text style={styles.entryTitle}>
+                {ed.degree} | {ed.start} – {ed.end}
+              </Text>
+              <Bullet>{ed.institution}</Bullet>
+            </View>
+          ))}
+        </View>
 
-        {cv.education?.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{sectionTitle("Education")}</Text>
-            {cv.education.map((ed, i) => (
-              <View key={i} style={styles.entry}>
-                <View style={styles.eduHeader}>
-                  <View style={styles.eduMain}>
-                    <Text style={styles.eduDegree}>{ed.degree}</Text>
-                    {ed.institution ? (
-                      <Text style={styles.eduInstitution}>
-                        {ed.institution}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <Text style={styles.entryDates}>
-                    {ed.start}
-                    {ed.start || ed.end ? " – " : ""}
-                    {ed.end}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {cv.skills && Object.keys(cv.skills).length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {sectionTitle("Technical Skills")}
-            </Text>
-            {Object.entries(cv.skills).map(([category, items]) => (
-              <View key={category} style={styles.skillRow}>
-                <Text style={styles.skillCategory}>{category}</Text>
-                <Text style={styles.skillItems}>
-                  {Array.isArray(items) ? items.join(", ") : items}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Technical Skills</Text>
+          {Object.entries(cv.skills).map(([category, items]) => {
+            const text = Array.isArray(items) ? items.join(', ') : items;
+            return (
+              <Text key={category} style={styles.skillRow}>
+                <Text style={styles.skillCategory}>{category}:</Text> {text}
+              </Text>
+            );
+          })}
+        </View>
       </Page>
     </Document>
   );
