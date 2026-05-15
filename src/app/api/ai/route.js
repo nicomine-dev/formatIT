@@ -1,78 +1,78 @@
-const MODEL = 'gemini-2.5-flash';
+const MODEL = "gemini-2.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 const cvSchema = {
-  type: 'object',
+  type: "object",
   properties: {
-    name: { type: 'string' },
-    title: { type: 'string' },
+    name: { type: "string" },
+    title: { type: "string" },
     contact: {
-      type: 'object',
+      type: "object",
       properties: {
-        location: { type: 'string' },
-        phone: { type: 'string' },
-        email: { type: 'string' },
-        linkedin: { type: 'string' },
-        github: { type: 'string' },
-        portfolio: { type: 'string' },
+        location: { type: "string" },
+        phone: { type: "string" },
+        email: { type: "string" },
+        linkedin: { type: "string" },
+        github: { type: "string" },
+        portfolio: { type: "string" },
       },
       propertyOrdering: [
-        'location',
-        'phone',
-        'email',
-        'linkedin',
-        'github',
-        'portfolio',
+        "location",
+        "phone",
+        "email",
+        "linkedin",
+        "github",
+        "portfolio",
       ],
     },
-    summary: { type: 'array', items: { type: 'string' } },
+    summary: { type: "array", items: { type: "string" } },
     experience: {
-      type: 'array',
+      type: "array",
       items: {
-        type: 'object',
+        type: "object",
         properties: {
-          role: { type: 'string' },
-          company: { type: 'string' },
-          start: { type: 'string' },
-          end: { type: 'string' },
-          bullets: { type: 'array', items: { type: 'string' } },
+          role: { type: "string" },
+          company: { type: "string" },
+          start: { type: "string" },
+          end: { type: "string" },
+          bullets: { type: "array", items: { type: "string" } },
         },
-        propertyOrdering: ['role', 'company', 'start', 'end', 'bullets'],
+        propertyOrdering: ["role", "company", "start", "end", "bullets"],
       },
     },
     education: {
-      type: 'array',
+      type: "array",
       items: {
-        type: 'object',
+        type: "object",
         properties: {
-          degree: { type: 'string' },
-          institution: { type: 'string' },
-          start: { type: 'string' },
-          end: { type: 'string' },
+          degree: { type: "string" },
+          institution: { type: "string" },
+          start: { type: "string" },
+          end: { type: "string" },
         },
-        propertyOrdering: ['degree', 'institution', 'start', 'end'],
+        propertyOrdering: ["degree", "institution", "start", "end"],
       },
     },
     skills: {
-      type: 'array',
+      type: "array",
       items: {
-        type: 'object',
+        type: "object",
         properties: {
-          category: { type: 'string' },
-          items: { type: 'string' },
+          category: { type: "string" },
+          items: { type: "string" },
         },
-        propertyOrdering: ['category', 'items'],
+        propertyOrdering: ["category", "items"],
       },
     },
   },
   propertyOrdering: [
-    'name',
-    'title',
-    'contact',
-    'summary',
-    'experience',
-    'education',
-    'skills',
+    "name",
+    "title",
+    "contact",
+    "summary",
+    "experience",
+    "education",
+    "skills",
   ],
 };
 
@@ -100,18 +100,87 @@ Rules:
 - Do not include markdown formatting.`;
 
 const skillsSchema = {
-  type: 'object',
+  type: "object",
   properties: {
     skills: cvSchema.properties.skills,
   },
-  propertyOrdering: ['skills'],
+  propertyOrdering: ["skills"],
 };
+
+const TRANSLATE_SYSTEM_INSTRUCTION = `You translate CV section content into the requested target language while preserving its JSON structure exactly.
+
+Rules:
+- Translate prose only: titles, summaries, role descriptions, bullets, degree names, skill items and category names.
+- Do NOT translate proper names (people, companies, institutions, products), email addresses, URLs, or phone numbers — keep them verbatim.
+- Translate natural-language dates ("Present", month names) into the target language. Keep numeric year/month digits as-is.
+- Do not add, remove, or reorder array items. Preserve the same number of paragraphs, experiences, bullets, education entries, and skill categories.
+- No markdown.`;
+
+const TRANSLATE_SECTIONS = [
+  "header",
+  "summary",
+  "experience",
+  "education",
+  "skills",
+];
+const TRANSLATE_LANGUAGES = ["English", "Spanish"];
+
+const sectionSchemas = {
+  header: {
+    type: "object",
+    properties: {
+      name: { type: "string" },
+      title: { type: "string" },
+      contact: cvSchema.properties.contact,
+    },
+    propertyOrdering: ["name", "title", "contact"],
+  },
+  summary: {
+    type: "object",
+    properties: { summary: cvSchema.properties.summary },
+    propertyOrdering: ["summary"],
+  },
+  experience: {
+    type: "object",
+    properties: { experience: cvSchema.properties.experience },
+    propertyOrdering: ["experience"],
+  },
+  education: {
+    type: "object",
+    properties: { education: cvSchema.properties.education },
+    propertyOrdering: ["education"],
+  },
+  skills: {
+    type: "object",
+    properties: { skills: cvSchema.properties.skills },
+    propertyOrdering: ["skills"],
+  },
+};
+
+function extractSection(section, current) {
+  if (section === "header") {
+    return {
+      name: current.name ?? "",
+      title: current.title ?? "",
+      contact: current.contact ?? {},
+    };
+  }
+  if (section === "skills") {
+    return {
+      skills: Object.entries(current.skills ?? {}).map(([category, items]) => ({
+        category,
+        items: Array.isArray(items) ? items.join(", ") : (items ?? ""),
+      })),
+    };
+  }
+  return { [section]: current[section] ?? [] };
+}
 
 export async function POST(req) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return Response.json(
-      { error: 'Server missing GEMINI_API_KEY. Add it to .env.local.' },
+      { error: "Server missing GEMINI_API_KEY. Add it to .env.local." },
       { status: 500 },
     );
   }
@@ -120,45 +189,97 @@ export async function POST(req) {
   try {
     body = await req.json();
   } catch {
-    return Response.json({ error: 'Invalid JSON body.' }, { status: 400 });
+    return Response.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const userPrompt = (body?.prompt || '').toString().trim();
-  if (!userPrompt) {
-    return Response.json(
-      { error: 'Provide a "prompt" describing the CV to build.' },
-      { status: 400 },
-    );
-  }
+  const scope =
+    body?.scope === "skills"
+      ? "skills"
+      : body?.scope === "translate"
+        ? "translate"
+        : "full";
 
-  const scope = body?.scope === 'skills' ? 'skills' : 'full';
-  const currentCv = body?.current ? JSON.stringify(body.current) : null;
-  const userParts = [
-    { text: userPrompt },
-    currentCv ? { text: `Existing CV (JSON):\n${currentCv}` } : null,
-  ].filter(Boolean);
+  let payload;
+  let translateSection;
 
-  const payload = {
-    systemInstruction: {
-      parts: [
+  if (scope === "translate") {
+    translateSection = body?.section;
+    const targetLanguage = body?.targetLanguage;
+    if (!TRANSLATE_SECTIONS.includes(translateSection)) {
+      return Response.json(
         {
-          text: scope === 'skills' ? SKILLS_SYSTEM_INSTRUCTION : SYSTEM_INSTRUCTION,
+          error: `Invalid section. Expected one of: ${TRANSLATE_SECTIONS.join(", ")}`,
+        },
+        { status: 400 },
+      );
+    }
+    if (!TRANSLATE_LANGUAGES.includes(targetLanguage)) {
+      return Response.json(
+        {
+          error: `Invalid targetLanguage. Expected one of: ${TRANSLATE_LANGUAGES.join(", ")}`,
+        },
+        { status: 400 },
+      );
+    }
+    const sectionData = extractSection(translateSection, body?.current ?? {});
+    payload = {
+      systemInstruction: {
+        parts: [{ text: TRANSLATE_SYSTEM_INSTRUCTION }],
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `Translate the following CV "${translateSection}" section into ${targetLanguage}. Return the same JSON structure with translated text.\n${JSON.stringify(sectionData)}`,
+            },
+          ],
         },
       ],
-    },
-    contents: [{ role: 'user', parts: userParts }],
-    generationConfig: {
-      responseMimeType: 'application/json',
-      responseSchema: scope === 'skills' ? skillsSchema : cvSchema,
-      temperature: 0.4,
-    },
-  };
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: sectionSchemas[translateSection],
+        temperature: 0.2,
+      },
+    };
+  } else {
+    const userPrompt = (body?.prompt || "").toString().trim();
+    if (!userPrompt) {
+      return Response.json(
+        { error: 'Provide a "prompt" describing the CV to build.' },
+        { status: 400 },
+      );
+    }
+    const currentCv = body?.current ? JSON.stringify(body.current) : null;
+    const userParts = [
+      { text: userPrompt },
+      currentCv ? { text: `Existing CV (JSON):\n${currentCv}` } : null,
+    ].filter(Boolean);
+    payload = {
+      systemInstruction: {
+        parts: [
+          {
+            text:
+              scope === "skills"
+                ? SKILLS_SYSTEM_INSTRUCTION
+                : SYSTEM_INSTRUCTION,
+          },
+        ],
+      },
+      contents: [{ role: "user", parts: userParts }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: scope === "skills" ? skillsSchema : cvSchema,
+        temperature: 0.4,
+      },
+    };
+  }
 
   let res;
   try {
     res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
   } catch (err) {
@@ -180,7 +301,7 @@ export async function POST(req) {
   const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) {
     return Response.json(
-      { error: 'Gemini response missing text', raw: json },
+      { error: "Gemini response missing text", raw: json },
       { status: 502 },
     );
   }
@@ -190,33 +311,69 @@ export async function POST(req) {
     parsed = JSON.parse(text);
   } catch (err) {
     return Response.json(
-      { error: 'Gemini returned non-JSON text', text },
+      { error: "Gemini returned non-JSON text", text },
       { status: 502 },
     );
+  }
+
+  if (scope === "translate") {
+    if (translateSection === "header") {
+      return Response.json({
+        section: "header",
+        data: {
+          name: parsed.name ?? "",
+          title: parsed.title ?? "",
+          contact: {
+            location: parsed.contact?.location ?? "",
+            phone: parsed.contact?.phone ?? "",
+            email: parsed.contact?.email ?? "",
+            linkedin: parsed.contact?.linkedin ?? "",
+            github: parsed.contact?.github ?? "",
+            portfolio: parsed.contact?.portfolio ?? "",
+          },
+        },
+      });
+    }
+    if (translateSection === "skills") {
+      const obj = Array.isArray(parsed.skills)
+        ? Object.fromEntries(
+            parsed.skills
+              .filter((s) => s && s.category)
+              .map((s) => [s.category, s.items ?? ""]),
+          )
+        : parsed.skills || {};
+      return Response.json({ section: "skills", data: obj });
+    }
+    return Response.json({
+      section: translateSection,
+      data: Array.isArray(parsed[translateSection])
+        ? parsed[translateSection]
+        : [],
+    });
   }
 
   const skillsObject = Array.isArray(parsed.skills)
     ? Object.fromEntries(
         parsed.skills
           .filter((s) => s && s.category)
-          .map((s) => [s.category, s.items ?? '']),
+          .map((s) => [s.category, s.items ?? ""]),
       )
     : parsed.skills || {};
 
-  if (scope === 'skills') {
+  if (scope === "skills") {
     return Response.json({ skills: skillsObject });
   }
 
   const cv = {
-    name: parsed.name ?? '',
-    title: parsed.title ?? '',
+    name: parsed.name ?? "",
+    title: parsed.title ?? "",
     contact: {
-      location: parsed.contact?.location ?? '',
-      phone: parsed.contact?.phone ?? '',
-      email: parsed.contact?.email ?? '',
-      linkedin: parsed.contact?.linkedin ?? '',
-      github: parsed.contact?.github ?? '',
-      portfolio: parsed.contact?.portfolio ?? '',
+      location: parsed.contact?.location ?? "",
+      phone: parsed.contact?.phone ?? "",
+      email: parsed.contact?.email ?? "",
+      linkedin: parsed.contact?.linkedin ?? "",
+      github: parsed.contact?.github ?? "",
+      portfolio: parsed.contact?.portfolio ?? "",
     },
     summary: Array.isArray(parsed.summary) ? parsed.summary : [],
     experience: Array.isArray(parsed.experience) ? parsed.experience : [],
