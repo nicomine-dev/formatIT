@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Button from "@/components/ui/Button";
+import CVPaper from "@/components/preview/CVPaper";
 import Label from "@/components/ui/Label";
 
 const DOT_GRID =
@@ -52,9 +53,7 @@ export default function PreviewPane({ cv }) {
         </Button>
       </div>
       <div className="flex flex-col items-center gap-8 px-6 py-10 lg:px-12">
-        <div className="rounded-3 bg-paper p-16 text-[13px] leading-relaxed text-ink-2 shadow-paper">
-          Preview will render here in step 7.
-        </div>
+        <CVPaper cv={cv} />
       </div>
     </section>
   );
