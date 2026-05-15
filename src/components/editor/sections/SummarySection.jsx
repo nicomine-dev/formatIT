@@ -1,9 +1,12 @@
 import Button from "@/components/ui/Button";
+import FillWithAI from "@/components/editor/FillWithAI";
 import Label from "@/components/ui/Label";
 import SectionTranslate from "@/components/editor/SectionTranslate";
 import Textarea from "@/components/ui/Textarea";
+import useFillWithAI from "@/hooks/useFillWithAI";
 
 export default function SummarySection({ cv, setCv, translate }) {
+  const fill = useFillWithAI({ section: "summary", cv, setCv });
   const update = (i, value) =>
     setCv((prev) => ({
       ...prev,
@@ -20,11 +23,15 @@ export default function SummarySection({ cv, setCv, translate }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <SectionTranslate section="summary" translate={translate} />
+        <div className="flex flex-wrap items-center gap-2">
+          {!fill.open && <FillWithAI section="summary" controller={fill} />}
+          <SectionTranslate section="summary" translate={translate} />
+        </div>
         <Button variant="ghost" onClick={add}>
           + Add paragraph
         </Button>
       </div>
+      {fill.open && <FillWithAI section="summary" controller={fill} />}
       <div className="space-y-4">
         {cv.summary.map((paragraph, i) => (
           <div key={i} className="space-y-2">

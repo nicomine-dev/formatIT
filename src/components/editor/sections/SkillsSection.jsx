@@ -1,10 +1,13 @@
 import Button from "@/components/ui/Button";
 import EntryCard from "@/components/editor/EntryCard";
+import FillWithAI from "@/components/editor/FillWithAI";
 import Input from "@/components/ui/Input";
 import SectionTranslate from "@/components/editor/SectionTranslate";
 import Textarea from "@/components/ui/Textarea";
+import useFillWithAI from "@/hooks/useFillWithAI";
 
 export default function SkillsSection({ cv, setCv, translate }) {
+  const fill = useFillWithAI({ section: "skills", cv, setCv });
   const rename = (oldName, newName) =>
     setCv((prev) => {
       if (newName === oldName) return prev;
@@ -39,11 +42,15 @@ export default function SkillsSection({ cv, setCv, translate }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <SectionTranslate section="skills" translate={translate} />
+        <div className="flex flex-wrap items-center gap-2">
+          {!fill.open && <FillWithAI section="skills" controller={fill} />}
+          <SectionTranslate section="skills" translate={translate} />
+        </div>
         <Button variant="ghost" onClick={add}>
           + Add category
         </Button>
       </div>
+      {fill.open && <FillWithAI section="skills" controller={fill} />}
       <div className="space-y-3">
         {Object.entries(cv.skills).map(([category, items], i) => (
           <EntryCard
