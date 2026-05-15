@@ -112,15 +112,13 @@ function PrimaryButton({ onClick, children }) {
 
 export default function CVEditor() {
   const [cv, setCv] = useState(initialCv);
-  const [openId, setOpenId] = useState('ai');
+  const [openId, setOpenId] = useState('header');
   const [hydrated, setHydrated] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiBusy, setAiBusy] = useState(false);
-  const [aiError, setAiError] = useState(null);
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [jobDescription, setJobDescription] = useState('');
   const [skillsBusy, setSkillsBusy] = useState(false);
   const [skillsError, setSkillsError] = useState(null);
+  const [fillSections, setFillSections] = useState(['summary', 'skills']);
 
   useEffect(() => {
     try {
@@ -141,11 +139,16 @@ export default function CVEditor() {
     }
   }, [cv, hydrated]);
 
-  const generateWithAI = async () => {
-    const prompt = aiPrompt.trim();
-    if (!prompt || aiBusy) return;
-    setAiBusy(true);
-    setAiError(null);
+  const toggleFillSection = (key) =>
+    setFillSections((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+
+  const fillWithAI = async () => {
+    const prompt = jobDescription.trim();
+    if (!prompt || skillsBusy || fillSections.length === 0) return;
+    setSkillsBusy(true);
+    setSkillsError(null);
     try {
       const res = await fetch('/api/ai', {
         method: 'POST',
@@ -155,31 +158,34 @@ export default function CVEditor() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
       if (!data.cv) throw new Error('Response missing cv field.');
-      setCv(data.cv);
-      setOpenId('header');
-    } catch (err) {
-      setAiError(err.message);
-    } finally {
-      setAiBusy(false);
-    }
-  };
 
-  const fillSkillsWithAI = async () => {
-    const prompt = jobDescription.trim();
-    if (!prompt || skillsBusy) return;
-    setSkillsBusy(true);
-    setSkillsError(null);
-    try {
-      const res = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, current: cv, scope: 'skills' }),
+      setCv((prev) => {
+        const next = { ...prev };
+        if (fillSections.includes('header')) {
+          if (data.cv.name) next.name = data.cv.name;
+          if (data.cv.title) next.title = data.cv.title;
+          if (data.cv.contact) next.contact = { ...prev.contact, ...data.cv.contact };
+        }
+        if (fillSections.includes('summary') && data.cv.summary?.length) {
+          next.summary = data.cv.summary;
+        }
+        if (fillSections.includes('experience') && data.cv.experience?.length) {
+          next.experience = data.cv.experience;
+        }
+        if (fillSections.includes('education') && data.cv.education?.length) {
+          next.education = data.cv.education;
+        }
+        if (
+          fillSections.includes('skills') &&
+          data.cv.skills &&
+          Object.keys(data.cv.skills).length
+        ) {
+          next.skills = data.cv.skills;
+        }
+        return next;
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-      if (!data.skills) throw new Error('Response missing skills field.');
-      setCv((prev) => ({ ...prev, skills: data.skills }));
-      setOpenId('skills');
+
+      setOpenId(fillSections[0]);
       setSkillsOpen(false);
       setJobDescription('');
     } catch (err) {
@@ -385,40 +391,6 @@ export default function CVEditor() {
         </div>
 
         <div className="space-y-3">
-          <Accordion
-            id="ai"
-            title="AI Autofill (Gemini)"
-            openId={openId}
-            setOpenId={setOpenId}
-          >
-            <div className="space-y-3">
-              <p className="text-xs text-zinc-600">
-                Paste an old CV, a job description, or a free-form description.
-                Gemini will turn it into an ATS-friendly CV and replace the current
-                fields.
-              </p>
-              <TextArea
-                label="Description"
-                value={aiPrompt}
-                onChange={setAiPrompt}
-                rows={6}
-              />
-              {aiError && (
-                <p className="rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
-                  {aiError}
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={generateWithAI}
-                disabled={aiBusy || !aiPrompt.trim()}
-                className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {aiBusy ? 'Generating…' : 'Generate with AI'}
-              </button>
-            </div>
-          </Accordion>
-
           <Accordion id="header" title="Header" openId={openId} setOpenId={setOpenId}>
             <div className="space-y-4">
               <Field
@@ -654,7 +626,7 @@ export default function CVEditor() {
               <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/50 p-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800">
-                    Fill Technical Skills
+                    Fill with AI
                   </h3>
                   <button
                     type="button"
@@ -667,9 +639,36 @@ export default function CVEditor() {
                     Cancel
                   </button>
                 </div>
+
+                <fieldset className="space-y-1">
+                  <legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                    Sections to update
+                  </legend>
+                  {[
+                    { key: 'header', label: 'Header' },
+                    { key: 'summary', label: 'Professional Summary' },
+                    { key: 'experience', label: 'Professional Experience' },
+                    { key: 'education', label: 'Education' },
+                    { key: 'skills', label: 'Technical Skills' },
+                  ].map(({ key, label }) => (
+                    <label
+                      key={key}
+                      className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm text-zinc-800 hover:bg-white"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={fillSections.includes(key)}
+                        onChange={() => toggleFillSection(key)}
+                        className="h-4 w-4 accent-blue-600"
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </fieldset>
+
                 <p className="text-xs text-zinc-600">
-                  Paste a job description. Gemini extracts the technical skills it
-                  requires and replaces the Technical Skills section.
+                  Paste a job description. Gemini tailors only the sections you
+                  check above to match the role.
                 </p>
                 <TextArea
                   label="Job description"
@@ -684,11 +683,15 @@ export default function CVEditor() {
                 )}
                 <button
                   type="button"
-                  onClick={fillSkillsWithAI}
-                  disabled={skillsBusy || !jobDescription.trim()}
+                  onClick={fillWithAI}
+                  disabled={
+                    skillsBusy ||
+                    !jobDescription.trim() ||
+                    fillSections.length === 0
+                  }
                   className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {skillsBusy ? 'Generating…' : 'Fill skills'}
+                  {skillsBusy ? 'Generating…' : 'Fill with AI'}
                 </button>
               </div>
             )}

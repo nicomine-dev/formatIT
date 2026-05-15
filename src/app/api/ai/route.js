@@ -76,16 +76,18 @@ const cvSchema = {
   ],
 };
 
-const SYSTEM_INSTRUCTION = `You build ATS-friendly CVs. Given a user's free-form description (raw resume text, job description, career notes, etc.), produce a CV in the exact JSON shape provided.
+const SYSTEM_INSTRUCTION = `You build ATS-friendly CVs. The user's input can be a raw resume, a job description, career notes, or any combination, and may also include the candidate's current CV.
 
 Rules:
-- Write in the same language the user used. If unclear, default to English.
-- Keep summaries 1-2 paragraphs, factual, no fluff.
-- Each experience bullet is one concrete achievement or responsibility (active verb, measurable when possible).
+- ALWAYS fill the summary, experience, education, and skills sections. Never return an empty array for them unless the candidate has zero data — when a current CV is provided, the candidate has data and you must rewrite, never erase.
+- When the user input is a job description, tailor the summary, experience bullets, and skills to align the candidate (from their current CV) with that role. Stay truthful to the candidate's actual history.
+- Summary: 1-2 short paragraphs, factual, role-focused, no filler. Always rewrite for the target role when a job description is involved.
+- Each experience bullet is one concrete achievement or responsibility, active verb, measurable when possible.
 - Dates use natural phrasing like "March 2024" or "Present".
-- Skills: group by category (e.g., "Programming Languages", "Frameworks", "Databases"). The items field is a comma-separated string.
+- Skills: group by category (e.g., "Programming Languages", "Frameworks", "Databases"). Items field is a comma-separated string.
+- Write in the same language the user used; default to English if unclear.
 - For contact fields you do not have, return an empty string — never invent emails, phones, or URLs.
-- Do not include markdown formatting in any field.`;
+- No markdown formatting in any field.`;
 
 const SKILLS_SYSTEM_INSTRUCTION = `You extract the technical skills required by a job description for an ATS-friendly CV.
 
