@@ -52,7 +52,7 @@ export default function FillWithAI({ section, controller }) {
   }
 
   return (
-    <div className="rounded-3 border border-accent-rule bg-accent-soft p-[14px]">
+    <div className="anim-fade-slide-down rounded-3 border border-accent-rule bg-accent-soft p-[14px]">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <span

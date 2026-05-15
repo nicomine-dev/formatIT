@@ -64,7 +64,7 @@ export default function Accordion({
           id={panelId}
           role="region"
           aria-labelledby={headerId}
-          className="px-[14px] pb-4 pt-1"
+          className="anim-fade-slide-down px-[14px] pb-4 pt-1"
         >
           <div className="space-y-[14px]">{children}</div>
         </div>

@@ -136,7 +136,7 @@ export default function EditorPanel({ cv, setCv }) {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-6 right-6 z-40 rounded-2 border border-[#b8dec9] bg-[#e8f5ee] px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-success shadow-2"
+          className="anim-toast-in fixed bottom-6 right-6 z-40 rounded-2 border border-[#b8dec9] bg-[#e8f5ee] px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-success shadow-2"
         >
           {toast}
         </div>
