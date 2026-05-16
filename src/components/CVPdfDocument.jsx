@@ -268,81 +268,91 @@ export default function CVPdfDocument({ cv }) {
       subject="Curriculum Vitae"
     >
       <Page size="A4" style={styles.page}>
-        <View>
-          <Text style={styles.name}>{cv.name}</Text>
-          <Text style={styles.subtitle}>{cv.title}</Text>
+        <View wrap={false}>
+          <View>
+            <Text style={styles.name}>{cv.name}</Text>
+            <Text style={styles.subtitle}>{cv.title}</Text>
 
-          <View style={styles.contactGrid}>
-            <ContactItem
-              label="Location"
-              field="location"
-              value={cv.contact.location}
-            />
-            <ContactItem
-              label="LinkedIn"
-              field="linkedin"
-              value={cv.contact.linkedin}
-            />
-            <ContactItem label="Phone" field="phone" value={cv.contact.phone} />
-            <ContactItem
-              label="GitHub"
-              field="github"
-              value={cv.contact.github}
-            />
-            <ContactItem label="Email" field="email" value={cv.contact.email} />
-            <ContactItem
-              label="Portfolio"
-              field="portfolio"
-              value={cv.contact.portfolio}
-            />
+            <View style={styles.contactGrid}>
+              <ContactItem
+                label="Location"
+                field="location"
+                value={cv.contact.location}
+              />
+              <ContactItem
+                label="LinkedIn"
+                field="linkedin"
+                value={cv.contact.linkedin}
+              />
+              <ContactItem
+                label="Phone"
+                field="phone"
+                value={cv.contact.phone}
+              />
+              <ContactItem
+                label="GitHub"
+                field="github"
+                value={cv.contact.github}
+              />
+              <ContactItem
+                label="Email"
+                field="email"
+                value={cv.contact.email}
+              />
+              <ContactItem
+                label="Portfolio"
+                field="portfolio"
+                value={cv.contact.portfolio}
+              />
+            </View>
           </View>
-        </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Professional Summary</Text>
-          {cv.summary.map((p, i) => (
-            <Text key={i} style={styles.paragraph}>
-              {p}
-            </Text>
-          ))}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Professional Experience</Text>
-          {cv.experience.map((job, i) => (
-            <View key={i} style={styles.entry}>
-              <Text style={styles.entryTitle}>
-                {job.role} | {job.start} - {job.end} | {job.company}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Professional Summary</Text>
+            {cv.summary.map((p, i) => (
+              <Text key={i} style={styles.paragraph}>
+                {p}
               </Text>
-              {job.bullets.map((b, j) => (
-                <Bullet key={j}>{b}</Bullet>
-              ))}
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Education</Text>
-          {cv.education.map((ed, i) => (
-            <View key={i} style={styles.entry}>
-              <Text style={styles.entryTitle}>
-                {ed.degree} | {ed.start} – {ed.end}
-              </Text>
-              <Bullet>{ed.institution}</Bullet>
-            </View>
-          ))}
-        </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Professional Experience</Text>
+            {cv.experience.map((job, i) => (
+              <View key={i} style={styles.entry}>
+                <Text style={styles.entryTitle}>
+                  {job.role} | {job.start} - {job.end} | {job.company}
+                </Text>
+                {job.bullets.map((b, j) => (
+                  <Bullet key={j}>{b}</Bullet>
+                ))}
+              </View>
+            ))}
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Technical Skills</Text>
-          {Object.entries(cv.skills).map(([category, items]) => {
-            const text = Array.isArray(items) ? items.join(", ") : items;
-            return (
-              <Text key={category} style={styles.skillRow}>
-                <Text style={styles.skillCategory}>{category}:</Text> {text}
-              </Text>
-            );
-          })}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Education</Text>
+            {cv.education.map((ed, i) => (
+              <View key={i} style={styles.entry}>
+                <Text style={styles.entryTitle}>
+                  {ed.degree} | {ed.start} – {ed.end}
+                </Text>
+                <Bullet>{ed.institution}</Bullet>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Technical Skills</Text>
+            {Object.entries(cv.skills).map(([category, items]) => {
+              const text = Array.isArray(items) ? items.join(", ") : items;
+              return (
+                <Text key={category} style={styles.skillRow}>
+                  <Text style={styles.skillCategory}>{category}:</Text> {text}
+                </Text>
+              );
+            })}
+          </View>
         </View>
       </Page>
     </Document>
