@@ -5,8 +5,8 @@ import SectionTranslate from "@/components/editor/SectionTranslate";
 import Textarea from "@/components/ui/Textarea";
 import useFillWithAI from "@/hooks/useFillWithAI";
 
-export default function SummarySection({ cv, setCv, translate }) {
-  const fill = useFillWithAI({ section: "summary", cv, setCv });
+export default function SummarySection({ cv, setCv, translate, email }) {
+  const fill = useFillWithAI({ section: "summary", cv, setCv, email });
   const update = (i, value) =>
     setCv((prev) => ({
       ...prev,

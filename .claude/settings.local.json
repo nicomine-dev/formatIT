@@ -5,7 +5,15 @@
       "Bash(git commit -m ' *)",
       "Bash(git rm *)",
       "Bash(npm run *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(git push *)",
+      "Bash(vercel --version)",
+      "Bash(git stash *)",
+      "Bash(vercel whoami *)",
+      "Bash(vercel project *)",
+      "Bash(vercel link *)",
+      "Bash(vercel env *)",
+      "Bash(node *)"
     ]
   }
 }

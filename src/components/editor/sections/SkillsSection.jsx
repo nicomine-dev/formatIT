@@ -6,8 +6,8 @@ import SectionTranslate from "@/components/editor/SectionTranslate";
 import Textarea from "@/components/ui/Textarea";
 import useFillWithAI from "@/hooks/useFillWithAI";
 
-export default function SkillsSection({ cv, setCv, translate }) {
-  const fill = useFillWithAI({ section: "skills", cv, setCv });
+export default function SkillsSection({ cv, setCv, translate, email }) {
+  const fill = useFillWithAI({ section: "skills", cv, setCv, email });
   const rename = (oldName, newName) =>
     setCv((prev) => {
       if (newName === oldName) return prev;

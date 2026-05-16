@@ -12,7 +12,7 @@ const ZOOM_STEPS = [0.34, 0.5, 0.75, 1];
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 1.5;
 
-export default function PreviewPane({ cv }) {
+export default function PreviewPane({ cv, isPro = false }) {
   const [downloading, setDownloading] = useState(false);
   const [zoom, setZoom] = useState(1);
 
@@ -37,7 +37,7 @@ export default function PreviewPane({ cv }) {
         import("@react-pdf/renderer"),
         import("@/components/CVPdfDocument"),
       ]);
-      const blob = await pdf(<CVPdfDocument cv={cv} />).toBlob();
+      const blob = await pdf(<CVPdfDocument cv={cv} isPro={isPro} />).toBlob();
       const url = URL.createObjectURL(blob);
       const sanitize = (s) => (s || "").replace(/[\\/:*?"<>|]+/g, "-").trim();
       const namePart = sanitize(cv.name) || "CV";

@@ -11,6 +11,8 @@ export default function SectionTranslate({ section, translate }) {
       onOpen={() => translate.open(section)}
       onClose={translate.close}
       onTranslate={translate.translate}
+      isPro={translate.isPro}
+      onUpgrade={translate.onUpgrade}
     />
   );
 }

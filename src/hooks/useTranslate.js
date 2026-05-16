@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 
-async function callApi({ section, targetLanguage, cv }) {
+async function callApi({ section, targetLanguage, cv, email }) {
   const res = await fetch("/api/ai", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -11,6 +11,7 @@ async function callApi({ section, targetLanguage, cv }) {
       section,
       targetLanguage,
       current: cv,
+      email: email || undefined,
     }),
   });
   const data = await res.json();
@@ -28,7 +29,7 @@ function applyHeader(prev, translated) {
   };
 }
 
-export default function useTranslate({ cv, setCv, onSuccess }) {
+export default function useTranslate({ cv, setCv, onSuccess, email }) {
   const [status, setStatus] = useState("idle"); // idle | loading | error
   const [error, setError] = useState(null);
   const [openSection, setOpenSection] = useState(null);
@@ -60,6 +61,7 @@ export default function useTranslate({ cv, setCv, onSuccess }) {
             section: "all",
             targetLanguage,
             cv,
+            email,
           });
           setCv((prev) => ({
             ...prev,
@@ -72,7 +74,12 @@ export default function useTranslate({ cv, setCv, onSuccess }) {
             skills: translated.skills ?? prev.skills,
           }));
         } else {
-          const translated = await callApi({ section, targetLanguage, cv });
+          const translated = await callApi({
+            section,
+            targetLanguage,
+            cv,
+            email,
+          });
           setCv((prev) =>
             section === "header"
               ? applyHeader(prev, translated)
@@ -87,7 +94,7 @@ export default function useTranslate({ cv, setCv, onSuccess }) {
         setError(err.message);
       }
     },
-    [cv, setCv, onSuccess],
+    [cv, setCv, onSuccess, email],
   );
 
   return {

@@ -20,7 +20,13 @@ function applyResponse(prev, section, data) {
   throw new Error(`Fill with AI not supported for section "${section}".`);
 }
 
-export default function useFillWithAI({ section, cv, setCv, onSuccess }) {
+export default function useFillWithAI({
+  section,
+  cv,
+  setCv,
+  onSuccess,
+  email,
+}) {
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | error
@@ -45,6 +51,7 @@ export default function useFillWithAI({ section, cv, setCv, onSuccess }) {
           prompt: trimmed,
           current: cv,
           scope: SCOPE_BY_SECTION[section],
+          email: email || undefined,
         }),
       });
       const data = await res.json();
@@ -59,7 +66,7 @@ export default function useFillWithAI({ section, cv, setCv, onSuccess }) {
       setStatus("error");
       setError(err.message);
     }
-  }, [prompt, status, cv, setCv, section, onSuccess]);
+  }, [prompt, status, cv, setCv, section, onSuccess, email]);
 
   return {
     open,

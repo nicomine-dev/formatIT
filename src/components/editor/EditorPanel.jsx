@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { cv as initialCv } from "@/data/cv";
 import Accordion, { AccordionList } from "@/components/editor/Accordion";
 import Button from "@/components/ui/Button";
 import EducationSection from "@/components/editor/sections/EducationSection";
@@ -16,20 +15,30 @@ import useTranslate from "@/hooks/useTranslate";
 
 const SECTION_IDS = ["header", "summary", "experience", "education", "skills"];
 
-export default function EditorPanel({ cv, setCv }) {
+export default function EditorPanel({
+  cv,
+  setCv,
+  onReset,
+  onSetAsDefault,
+  email,
+  isPro,
+  onUpgrade,
+}) {
   const { open, toggle, registerRef, handleKeyDown } = useAccordion(
     "header",
     SECTION_IDS,
   );
   const [toast, setToast] = useState(null);
-  const translate = useTranslate({
+  const translateHook = useTranslate({
     cv,
     setCv,
+    email,
     onSuccess: (lang) => {
       setToast(`Translated to ${lang}`);
       setTimeout(() => setToast(null), 2500);
     },
   });
+  const translate = { ...translateHook, isPro, onUpgrade };
 
   const reset = () => {
     if (
@@ -37,14 +46,31 @@ export default function EditorPanel({ cv, setCv }) {
         "Reset the CV to the default content? Your current edits will be lost.",
       )
     ) {
-      setCv(initialCv);
+      onReset();
+    }
+  };
+
+  const setAsDefault = () => {
+    if (
+      confirm(
+        "Save the current CV as your default? This will replace any previously saved default.",
+      )
+    ) {
+      const ok = onSetAsDefault();
+      setToast(ok ? "Saved as default" : "Failed to save default");
+      setTimeout(() => setToast(null), 2500);
     }
   };
 
   const sectionRender = {
     header: () => <HeaderSection cv={cv} setCv={setCv} translate={translate} />,
     summary: () => (
-      <SummarySection cv={cv} setCv={setCv} translate={translate} />
+      <SummarySection
+        cv={cv}
+        setCv={setCv}
+        translate={translate}
+        email={email}
+      />
     ),
     experience: () => (
       <ExperienceSection cv={cv} setCv={setCv} translate={translate} />
@@ -52,7 +78,14 @@ export default function EditorPanel({ cv, setCv }) {
     education: () => (
       <EducationSection cv={cv} setCv={setCv} translate={translate} />
     ),
-    skills: () => <SkillsSection cv={cv} setCv={setCv} translate={translate} />,
+    skills: () => (
+      <SkillsSection
+        cv={cv}
+        setCv={setCv}
+        translate={translate}
+        email={email}
+      />
+    ),
   };
 
   const sections = [
@@ -89,9 +122,14 @@ export default function EditorPanel({ cv, setCv }) {
               Edit your CV
             </h2>
           </div>
-          <Button variant="ghost" onClick={reset}>
-            Reset
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={reset}>
+              Reset
+            </Button>
+            <Button variant="outline" onClick={setAsDefault}>
+              Set as default
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6 flex items-center justify-between rounded-3 border border-rule bg-paper px-4 py-3 shadow-1">
@@ -110,6 +148,8 @@ export default function EditorPanel({ cv, setCv }) {
             onOpen={() => translate.open("all")}
             onClose={translate.close}
             onTranslate={translate.translate}
+            isPro={isPro}
+            onUpgrade={onUpgrade}
           />
         </div>
 

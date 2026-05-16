@@ -1,5 +1,12 @@
+import { checkRateLimit, dayBucket, getClientIp } from "@/lib/rate-limit";
+import { getProStatus, isValidEmail } from "@/lib/pro";
+
 const MODEL = "gemini-2.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+
+const FREE_DAILY_LIMIT = 3;
+const FREE_LANGUAGES = ["English", "Spanish"];
+const PRO_LANGUAGES = ["French", "Portuguese", "German", "Italian"];
 
 const cvSchema = {
   type: "object",
@@ -123,7 +130,7 @@ const TRANSLATE_SECTIONS = [
   "education",
   "skills",
 ];
-const TRANSLATE_LANGUAGES = ["English", "Spanish"];
+const TRANSLATE_LANGUAGES = [...FREE_LANGUAGES, ...PRO_LANGUAGES];
 
 const sectionSchemas = {
   header: {
@@ -192,6 +199,31 @@ export async function POST(req) {
     return Response.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
+  const email = isValidEmail(body?.email)
+    ? body.email.trim().toLowerCase()
+    : null;
+  const proStatus = email ? await getProStatus(email) : { isPro: false };
+
+  if (!proStatus.isPro) {
+    const ip = getClientIp(req);
+    const key = `rl:ai:${ip}:${dayBucket()}`;
+    const rl = await checkRateLimit({
+      key,
+      limit: FREE_DAILY_LIMIT,
+      windowSeconds: 60 * 60 * 24,
+    });
+    if (!rl.allowed) {
+      return Response.json(
+        {
+          error: `Daily free limit reached (${FREE_DAILY_LIMIT}/day). Upgrade to Pro for unlimited AI.`,
+          retryAfter: rl.retryAfter,
+          upgrade: true,
+        },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+      );
+    }
+  }
+
   const scope =
     body?.scope === "skills"
       ? "skills"
@@ -219,6 +251,15 @@ export async function POST(req) {
           error: `Invalid targetLanguage. Expected one of: ${TRANSLATE_LANGUAGES.join(", ")}`,
         },
         { status: 400 },
+      );
+    }
+    if (PRO_LANGUAGES.includes(targetLanguage) && !proStatus.isPro) {
+      return Response.json(
+        {
+          error: `${targetLanguage} is a Pro language. Upgrade to unlock.`,
+          upgrade: true,
+        },
+        { status: 402 },
       );
     }
     const sectionData = extractSection(translateSection, body?.current ?? {});
