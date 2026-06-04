@@ -16,9 +16,11 @@ export default function UpgradeModal({
   onClose,
   initialEmail,
   onSaveEmail,
+  onCheckStatus,
 }) {
   const [email, setEmail] = useState(initialEmail || "");
   const [error, setError] = useState(null);
+  const [checking, setChecking] = useState(false);
 
   if (!open) return null;
 
@@ -36,6 +38,31 @@ export default function UpgradeModal({
     const sep = PAYMENT_LINK.includes("?") ? "&" : "?";
     const url = `${PAYMENT_LINK}${sep}external_reference=${encodeURIComponent(e)}&customer_email=${encodeURIComponent(e)}`;
     window.location.href = url;
+  };
+
+  const activateExisting = async () => {
+    const e = email.trim().toLowerCase();
+    if (!isValidEmail(e)) {
+      setError("Please enter a valid email.");
+      return;
+    }
+    setChecking(true);
+    setError(null);
+    try {
+      onSaveEmail?.(e);
+      const status = await onCheckStatus?.(e);
+      if (status?.isPro) {
+        onClose();
+      } else {
+        setError(
+          "That email has no active Pro subscription. If you just paid, activation can take a few minutes.",
+        );
+      }
+    } catch {
+      setError("Could not verify status. Try again.");
+    } finally {
+      setChecking(false);
+    }
   };
 
   return (
@@ -101,9 +128,19 @@ export default function UpgradeModal({
             Continue to payment →
           </Button>
         </div>
-        <p className="mt-4 text-[11px] leading-snug text-ink-3">
-          Payments processed by dLocal Go. After paying, return to formatIT and
-          enter the same email here to activate Pro on this device.
+        <div className="mt-4 border-t border-rule pt-3">
+          <button
+            type="button"
+            onClick={activateExisting}
+            disabled={checking}
+            className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink-2 underline-offset-2 hover:text-ink hover:underline disabled:opacity-50"
+          >
+            {checking ? "Checking…" : "Already Pro? Activate this device"}
+          </button>
+        </div>
+        <p className="mt-3 text-[11px] leading-snug text-ink-3">
+          Payments processed by dLocal Go. After paying, enter the same email
+          here and use “Activate this device”.
         </p>
       </div>
     </div>

@@ -103,6 +103,7 @@ export default function EditorShell() {
         onClose={() => setUpgradeOpen(false)}
         initialEmail={pro.email}
         onSaveEmail={pro.setEmail}
+        onCheckStatus={pro.refresh}
       />
     </div>
   );
