@@ -78,7 +78,7 @@ export default function ProSuccessPage() {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={setEmail}
               />
             </div>
             <div className="mt-4 flex items-center justify-end gap-2">

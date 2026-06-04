@@ -127,7 +127,7 @@ export default function AdminPage() {
               type="password"
               autoComplete="off"
               value={secret}
-              onChange={(e) => setSecret(e.target.value)}
+              onChange={setSecret}
             />
           </div>
           {message?.kind === "error" && (
@@ -186,7 +186,7 @@ export default function AdminPage() {
                 type="email"
                 placeholder="customer@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={setEmail}
               />
             </div>
             <div className="space-y-2">
@@ -196,7 +196,7 @@ export default function AdminPage() {
                 type="number"
                 min="1"
                 value={days}
-                onChange={(e) => setDays(e.target.value)}
+                onChange={setDays}
               />
             </div>
           </div>

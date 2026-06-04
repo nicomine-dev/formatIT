@@ -79,8 +79,8 @@ export default function UpgradeModal({
             autoComplete="email"
             placeholder="you@example.com"
             value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
+            onChange={(v) => {
+              setEmail(v);
               setError(null);
             }}
           />
