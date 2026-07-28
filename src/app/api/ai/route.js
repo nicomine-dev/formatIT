@@ -85,10 +85,15 @@ const cvSchema = {
 
 const SYSTEM_INSTRUCTION = `You build ATS-friendly CVs. The user's input can be a raw resume, a job description, career notes, or any combination, and may also include the candidate's current CV.
 
+Voice:
+- Write in first person, as the candidate — a working developer / systems analyst describing their own work ("I build...", "I've worked with..."), never a recruiter describing them in third person.
+- Sound like a person, not a generated profile. Plain verbs, concrete technologies, real outcomes. Banned: "results-driven", "passionate", "dynamic", "leveraging", "cutting-edge", "proven track record", "synergy", "detail-oriented" and similar CV-speak.
+- Prefer specifics over adjectives: what was built, with what stack, for whom — not how "efficient, scalable and visually appealing" it was.
+
 Rules:
 - ALWAYS fill the summary, experience, education, and skills sections. Never return an empty array for them unless the candidate has zero data — when a current CV is provided, the candidate has data and you must rewrite, never erase.
 - When the user input is a job description, tailor the summary, experience bullets, and skills to align the candidate (from their current CV) with that role. Stay truthful to the candidate's actual history.
-- Summary: 1-2 short paragraphs, factual, role-focused, no filler. Always rewrite for the target role when a job description is involved.
+- Summary: 1-2 short paragraphs. Lead with who I am and what I actually do (role, stack, domain), then the one or two things that make me a fit for the target role. When the input is a job description, pick ONLY the strongest matches between my background and the role — never restate the posting or echo its requirements back as a list.
 - Each experience bullet is one concrete achievement or responsibility, active verb, measurable when possible.
 - Dates use natural phrasing like "March 2024" or "Present".
 - Skills: group by category (e.g., "Programming Languages", "Frameworks", "Databases"). Items field is a comma-separated string.
@@ -96,14 +101,15 @@ Rules:
 - For contact fields you do not have, return an empty string — never invent emails, phones, or URLs.
 - No markdown formatting in any field.`;
 
-const SKILLS_SYSTEM_INSTRUCTION = `You extract the technical skills required by a job description for an ATS-friendly CV.
+const SKILLS_SYSTEM_INSTRUCTION = `You curate the Technical Skills section of a CV for a developer / systems analyst applying to a job description.
 
 Rules:
-- Read the job description and list every concrete technical skill, framework, language, tool, methodology, or platform it asks for or implies.
-- Group skills into clear categories. Suggested categories (use only those that apply, add more if needed): "Programming Languages", "Frameworks & Libraries", "Databases", "Cloud & DevOps", "Tools", "Methodologies", "Soft Skills".
+- Do NOT list everything the job description mentions. Select what matters, in this order: (1) skills the candidate already has that the role asks for, (2) the role's core stack — the technologies the posting treats as must-haves, (3) the candidate's strongest remaining skills that support the role. Skip incidental mentions and nice-to-haves.
+- This is a technical section: no soft skills, spoken languages, or traits like "teamwork" — even when the job description asks for them.
+- Keep it tight: 3-5 categories with roughly 3-8 items each. A short, sharp list reads as senior; an exhaustive keyword dump reads as generated.
+- Name categories the way developers do (e.g. "Languages", "Frontend", "Backend & Databases", "DevOps & Cloud", "Practices"). Use only categories that apply.
+- Write items as bare technology names ("PostgreSQL", "GitHub Actions") — never phrases like "Experience with X" or "Knowledge of Y".
 - The items field is a comma-separated string in the same language as the job description.
-- Only include skills the job description supports — do not invent unrelated skills.
-- If an existing CV is provided, keep relevant skills the candidate already has and add the new ones from the job description.
 - Do not include markdown formatting.`;
 
 const skillsSchema = {
