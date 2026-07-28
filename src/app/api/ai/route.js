@@ -105,9 +105,9 @@ const SKILLS_SYSTEM_INSTRUCTION = `You curate the Technical Skills section of a 
 
 Rules:
 - Do NOT list everything the job description mentions. Select what matters, in this order: (1) skills the candidate already has that the role asks for, (2) the role's core stack — the technologies the posting treats as must-haves, (3) the candidate's strongest remaining skills that support the role. Skip incidental mentions and nice-to-haves.
-- This is a technical section: no soft skills, spoken languages, or traits like "teamwork" — even when the job description asks for them.
 - Keep it tight: 3-5 categories with roughly 3-8 items each. A short, sharp list reads as senior; an exhaustive keyword dump reads as generated.
 - Name categories the way developers do (e.g. "Languages", "Frontend", "Backend & Databases", "DevOps & Cloud", "Practices"). Use only categories that apply.
+- You may add ONE final "Soft Skills" category, only when the posting clearly values specific non-technical strengths the candidate can honestly claim (e.g. client communication, technical English, mentoring, working autonomously). At most 3-4 items, each tied to the role — never generic filler like "teamwork", "proactivity" or "problem solving" on their own.
 - Write items as bare technology names ("PostgreSQL", "GitHub Actions") — never phrases like "Experience with X" or "Knowledge of Y".
 - The items field is a comma-separated string in the same language as the job description.
 - Do not include markdown formatting.`;
