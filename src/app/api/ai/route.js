@@ -124,6 +124,7 @@ Rules:
 - No markdown.`;
 
 const TRANSLATE_SECTIONS = [
+  "all",
   "header",
   "summary",
   "experience",
@@ -133,6 +134,7 @@ const TRANSLATE_SECTIONS = [
 const TRANSLATE_LANGUAGES = [...FREE_LANGUAGES, ...PRO_LANGUAGES];
 
 const sectionSchemas = {
+  all: cvSchema,
   header: {
     type: "object",
     properties: {
@@ -165,6 +167,17 @@ const sectionSchemas = {
 };
 
 function extractSection(section, current) {
+  if (section === "all") {
+    return {
+      name: current.name ?? "",
+      title: current.title ?? "",
+      contact: current.contact ?? {},
+      summary: current.summary ?? [],
+      experience: current.experience ?? [],
+      education: current.education ?? [],
+      ...extractSection("skills", current),
+    };
+  }
   if (section === "header") {
     return {
       name: current.name ?? "",
@@ -183,6 +196,27 @@ function extractSection(section, current) {
   return { [section]: current[section] ?? [] };
 }
 
+function skillsToObject(skills) {
+  return Array.isArray(skills)
+    ? Object.fromEntries(
+        skills
+          .filter((skill) => skill && skill.category)
+          .map((skill) => [skill.category, skill.items ?? ""]),
+      )
+    : skills || {};
+}
+
+function normalizeContact(contact) {
+  return {
+    location: contact?.location ?? "",
+    phone: contact?.phone ?? "",
+    email: contact?.email ?? "",
+    linkedin: contact?.linkedin ?? "",
+    github: contact?.github ?? "",
+    portfolio: contact?.portfolio ?? "",
+  };
+}
+
 export async function POST(req) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -199,10 +233,65 @@ export async function POST(req) {
     return Response.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
+  const scope =
+    body?.scope === "skills"
+      ? "skills"
+      : body?.scope === "translate"
+        ? "translate"
+        : "full";
+
+  // Validate the request before it consumes a free-tier rate-limit slot.
+  let translateSection;
+  let targetLanguage;
+  let userPrompt;
+
+  if (scope === "translate") {
+    translateSection = body?.section;
+    targetLanguage = body?.targetLanguage;
+    if (!TRANSLATE_SECTIONS.includes(translateSection)) {
+      return Response.json(
+        {
+          error: `Invalid section. Expected one of: ${TRANSLATE_SECTIONS.join(", ")}`,
+        },
+        { status: 400 },
+      );
+    }
+    if (!TRANSLATE_LANGUAGES.includes(targetLanguage)) {
+      return Response.json(
+        {
+          error: `Invalid targetLanguage. Expected one of: ${TRANSLATE_LANGUAGES.join(", ")}`,
+        },
+        { status: 400 },
+      );
+    }
+  } else {
+    userPrompt = (body?.prompt || "").toString().trim();
+    if (!userPrompt) {
+      return Response.json(
+        { error: 'Provide a "prompt" describing the CV to build.' },
+        { status: 400 },
+      );
+    }
+  }
+
   const email = isValidEmail(body?.email)
     ? body.email.trim().toLowerCase()
     : null;
   const proStatus = email ? await getProStatus(email) : { isPro: false };
+
+  if (
+    scope === "translate" &&
+    PRO_LANGUAGES.includes(targetLanguage) &&
+    !proStatus.isPro
+  ) {
+    return Response.json(
+      {
+        error: `${targetLanguage} is a Pro language. Upgrade to unlock.`,
+        upgrade: true,
+      },
+      { status: 402 },
+    );
+  }
 
   if (!proStatus.isPro) {
     const ip = getClientIp(req);
@@ -224,45 +313,14 @@ export async function POST(req) {
     }
   }
 
-  const scope =
-    body?.scope === "skills"
-      ? "skills"
-      : body?.scope === "translate"
-        ? "translate"
-        : "full";
-
   let payload;
-  let translateSection;
 
   if (scope === "translate") {
-    translateSection = body?.section;
-    const targetLanguage = body?.targetLanguage;
-    if (!TRANSLATE_SECTIONS.includes(translateSection)) {
-      return Response.json(
-        {
-          error: `Invalid section. Expected one of: ${TRANSLATE_SECTIONS.join(", ")}`,
-        },
-        { status: 400 },
-      );
-    }
-    if (!TRANSLATE_LANGUAGES.includes(targetLanguage)) {
-      return Response.json(
-        {
-          error: `Invalid targetLanguage. Expected one of: ${TRANSLATE_LANGUAGES.join(", ")}`,
-        },
-        { status: 400 },
-      );
-    }
-    if (PRO_LANGUAGES.includes(targetLanguage) && !proStatus.isPro) {
-      return Response.json(
-        {
-          error: `${targetLanguage} is a Pro language. Upgrade to unlock.`,
-          upgrade: true,
-        },
-        { status: 402 },
-      );
-    }
     const sectionData = extractSection(translateSection, body?.current ?? {});
+    const translateTarget =
+      translateSection === "all"
+        ? "full CV"
+        : `CV "${translateSection}" section`;
     payload = {
       systemInstruction: {
         parts: [{ text: TRANSLATE_SYSTEM_INSTRUCTION }],
@@ -272,7 +330,7 @@ export async function POST(req) {
           role: "user",
           parts: [
             {
-              text: `Translate the following CV "${translateSection}" section into ${targetLanguage}. Return the same JSON structure with translated text.\n${JSON.stringify(sectionData)}`,
+              text: `Translate the following ${translateTarget} into ${targetLanguage}. Return the same JSON structure with translated text.\n${JSON.stringify(sectionData)}`,
             },
           ],
         },
@@ -284,13 +342,6 @@ export async function POST(req) {
       },
     };
   } else {
-    const userPrompt = (body?.prompt || "").toString().trim();
-    if (!userPrompt) {
-      return Response.json(
-        { error: 'Provide a "prompt" describing the CV to build.' },
-        { status: 400 },
-      );
-    }
     const currentCv = body?.current ? JSON.stringify(body.current) : null;
     const userParts = [
       { text: userPrompt },
@@ -358,32 +409,35 @@ export async function POST(req) {
   }
 
   if (scope === "translate") {
+    if (translateSection === "all") {
+      return Response.json({
+        section: "all",
+        data: {
+          name: parsed.name ?? "",
+          title: parsed.title ?? "",
+          contact: normalizeContact(parsed.contact),
+          summary: Array.isArray(parsed.summary) ? parsed.summary : [],
+          experience: Array.isArray(parsed.experience) ? parsed.experience : [],
+          education: Array.isArray(parsed.education) ? parsed.education : [],
+          skills: skillsToObject(parsed.skills),
+        },
+      });
+    }
     if (translateSection === "header") {
       return Response.json({
         section: "header",
         data: {
           name: parsed.name ?? "",
           title: parsed.title ?? "",
-          contact: {
-            location: parsed.contact?.location ?? "",
-            phone: parsed.contact?.phone ?? "",
-            email: parsed.contact?.email ?? "",
-            linkedin: parsed.contact?.linkedin ?? "",
-            github: parsed.contact?.github ?? "",
-            portfolio: parsed.contact?.portfolio ?? "",
-          },
+          contact: normalizeContact(parsed.contact),
         },
       });
     }
     if (translateSection === "skills") {
-      const obj = Array.isArray(parsed.skills)
-        ? Object.fromEntries(
-            parsed.skills
-              .filter((s) => s && s.category)
-              .map((s) => [s.category, s.items ?? ""]),
-          )
-        : parsed.skills || {};
-      return Response.json({ section: "skills", data: obj });
+      return Response.json({
+        section: "skills",
+        data: skillsToObject(parsed.skills),
+      });
     }
     return Response.json({
       section: translateSection,
@@ -393,13 +447,7 @@ export async function POST(req) {
     });
   }
 
-  const skillsObject = Array.isArray(parsed.skills)
-    ? Object.fromEntries(
-        parsed.skills
-          .filter((s) => s && s.category)
-          .map((s) => [s.category, s.items ?? ""]),
-      )
-    : parsed.skills || {};
+  const skillsObject = skillsToObject(parsed.skills);
 
   if (scope === "skills") {
     return Response.json({ skills: skillsObject });
@@ -408,14 +456,7 @@ export async function POST(req) {
   const cv = {
     name: parsed.name ?? "",
     title: parsed.title ?? "",
-    contact: {
-      location: parsed.contact?.location ?? "",
-      phone: parsed.contact?.phone ?? "",
-      email: parsed.contact?.email ?? "",
-      linkedin: parsed.contact?.linkedin ?? "",
-      github: parsed.contact?.github ?? "",
-      portfolio: parsed.contact?.portfolio ?? "",
-    },
+    contact: normalizeContact(parsed.contact),
     summary: Array.isArray(parsed.summary) ? parsed.summary : [],
     experience: Array.isArray(parsed.experience) ? parsed.experience : [],
     education: Array.isArray(parsed.education) ? parsed.education : [],
