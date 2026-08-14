@@ -38,6 +38,14 @@ export default function SkillsSection({ cv, setCv, translate, email }) {
       delete next[category];
       return { ...prev, skills: next };
     });
+  const move = (from, to) =>
+    setCv((prev) => {
+      const entries = Object.entries(prev.skills);
+      if (to < 0 || to >= entries.length) return prev;
+      const [entry] = entries.splice(from, 1);
+      entries.splice(to, 0, entry);
+      return { ...prev, skills: Object.fromEntries(entries) };
+    });
 
   return (
     <div className="space-y-4">
@@ -52,11 +60,15 @@ export default function SkillsSection({ cv, setCv, translate, email }) {
       </div>
       {fill.open && <FillWithAI section="skills" controller={fill} />}
       <div className="space-y-3">
-        {Object.entries(cv.skills).map(([category, items], i) => (
+        {Object.entries(cv.skills).map(([category, items], i, entries) => (
           <EntryCard
             key={i}
             kind="Skill group"
             index={i + 1}
+            onMoveUp={i > 0 ? () => move(i, i - 1) : undefined}
+            onMoveDown={
+              i < entries.length - 1 ? () => move(i, i + 1) : undefined
+            }
             onRemove={() => remove(category)}
           >
             <Input
