@@ -94,7 +94,6 @@ export default function UpgradeModal({
           anytime.
         </p>
         <ul className="mb-5 space-y-1.5 text-[12.5px] text-ink-2">
-          <li>· PDF without watermark</li>
           <li>· Unlimited AI fills &amp; translations</li>
           <li>· Translate to French, Portuguese, German, Italian</li>
         </ul>

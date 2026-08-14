@@ -16,8 +16,6 @@ const ZINC_900 = "#18181b";
 const ZINC_800 = "#27272a";
 const ZINC_300 = "#d4d4d8";
 
-const ZINC_500 = "#a1a1aa";
-
 const styles = StyleSheet.create({
   page: {
     paddingHorizontal: "7mm",
@@ -26,16 +24,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: ZINC_900,
     lineHeight: 1.4,
-  },
-  watermark: {
-    position: "absolute",
-    bottom: "3mm",
-    left: 0,
-    right: 0,
-    textAlign: "center",
-    fontFamily: "Helvetica-Oblique",
-    fontSize: 7,
-    color: ZINC_500,
   },
   name: {
     fontFamily: "Helvetica-Bold",
@@ -273,7 +261,7 @@ function Bullet({ children }) {
   );
 }
 
-export default function CVPdfDocument({ cv, isPro = false }) {
+export default function CVPdfDocument({ cv }) {
   return (
     <Document
       title={`${cv.name} - CV`}
@@ -281,11 +269,6 @@ export default function CVPdfDocument({ cv, isPro = false }) {
       subject="Curriculum Vitae"
     >
       <Page size="A4" style={styles.page}>
-        {!isPro && (
-          <Text style={styles.watermark} fixed>
-            Made with formatIT · formatit.app
-          </Text>
-        )}
         <View wrap={false}>
           <View>
             <Text style={styles.name}>{cv.name}</Text>

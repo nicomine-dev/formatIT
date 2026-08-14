@@ -94,7 +94,7 @@ export default function EditorShell() {
             mobileView === "preview" ? "block" : "hidden"
           } md:block lg:contents flex-1`}
         >
-          <PreviewPane cv={cv} isPro={pro.isPro} />
+          <PreviewPane cv={cv} />
         </div>
       </div>
       <MobileTabs value={mobileView} onChange={setMobileView} />
