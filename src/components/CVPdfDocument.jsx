@@ -238,9 +238,10 @@ function toHref(field, value) {
   }
 }
 
-function ContactItem({ label, field, value }) {
-  if (!value) return null;
-  const href = toHref(field, value);
+function ContactItem({ label, field, value, url }) {
+  const display = value || url;
+  if (!display) return null;
+  const href = toHref(field, url || value);
   const Icon = SOCIAL_ICONS[field];
   return (
     <View style={styles.contactItem}>
@@ -253,10 +254,10 @@ function ContactItem({ label, field, value }) {
         <Text style={styles.contactLabel}>{label}: </Text>
         {href ? (
           <Link src={href} style={styles.link}>
-            {value}
+            {display}
           </Link>
         ) : (
-          value
+          display
         )}
       </Text>
     </View>
@@ -320,6 +321,7 @@ export default function CVPdfDocument({ cv, isPro = false }) {
                 label="Portfolio"
                 field="portfolio"
                 value={cv.contact.portfolio}
+                url={cv.contact.portfolioUrl}
               />
             </View>
           </View>

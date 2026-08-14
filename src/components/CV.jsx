@@ -184,8 +184,9 @@ const ICONS = {
   portfolio: IconPortfolio,
 };
 
-function ContactItem({ label, field, value }) {
-  const href = toHref(field, value);
+function ContactItem({ label, field, value, url }) {
+  const display = value || url;
+  const href = toHref(field, url || value);
   const Icon = ICONS[field];
   return (
     <li className="flex items-center gap-1.5">
@@ -199,10 +200,10 @@ function ContactItem({ label, field, value }) {
             rel="noopener noreferrer"
             className="text-blue-700 underline-offset-2 hover:underline"
           >
-            {value}
+            {display}
           </a>
         ) : (
-          value
+          display
         )}
       </span>
     </li>
@@ -245,6 +246,7 @@ export default function CV({ cv }) {
             label="Portfolio"
             field="portfolio"
             value={cv.contact.portfolio}
+            url={cv.contact.portfolioUrl}
           />
         </ul>
       </header>

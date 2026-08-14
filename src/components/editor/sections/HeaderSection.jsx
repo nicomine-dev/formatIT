@@ -9,6 +9,7 @@ const CONTACT_FIELDS = [
   { key: "linkedin", label: "LinkedIn" },
   { key: "github", label: "GitHub" },
   { key: "portfolio", label: "Portfolio" },
+  { key: "portfolioUrl", label: "Portfolio URL" },
 ];
 
 export default function HeaderSection({ cv, setCv, translate }) {
