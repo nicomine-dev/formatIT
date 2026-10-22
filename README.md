@@ -1,48 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# formatIT
 
-## Getting Started
+Live resume editor that exports clean, ATS-friendly one-page PDFs. You type on the left, the page updates on the right, and an AI assistant can draft or translate any section for you.
 
-First, run the development server:
+**Live:** https://format-it-pied.vercel.app
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Live preview**: the A4 page re-renders as you edit, on desktop or with mobile tabs.
+- **PDF export** with `@react-pdf/renderer`: real text (selectable and parseable by ATS), clickable contact links, one-page layout.
+- **AI fill**: Gemini (`gemini-2.5-flash`) drafts summaries, bullets and skills from a short prompt.
+- **AI translate**: translates a section while keeping its JSON structure, proper names, emails and URLs intact.
+- **Free and Pro tiers**: 3 free AI requests a day per IP (rate limited with Redis), a Pro plan paid through dLocal with a webhook, and an admin page to manage Pro users.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Next.js 16 (App Router, route handlers) · React 19 · Tailwind CSS 4 · @react-pdf/renderer · Gemini API · Redis · dLocal · Vitest + Testing Library · ESLint + Prettier · Vercel
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Testing
-
-Tests run with [Vitest](https://vitest.dev) and [@testing-library/react](https://testing-library.com/docs/react-testing-library/intro/) in a jsdom environment. Test files live in `src/__tests__/`.
+## Run it locally
 
 ```bash
-npm test              # Run all tests once
-npm run test:watch    # Watch mode
-npm run test:coverage # Run with coverage report (coverage/index.html)
+npm install
+npm run dev        # http://localhost:3000
+npm test           # Vitest
+npm run test:coverage
 ```
 
-See `.claude/docs/testing.md` for conventions.
+The AI and payment features need their API keys in `.env.local`. The editor and PDF export work without them.
 
-## Deploy on Vercel
+## Project layout
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/app/            pages and API routes (ai, pro/status, dlocal/webhook, admin/pro)
+src/components/     editor panel, sections, live preview, CVPdfDocument (the PDF template)
+src/lib/            rate limiting, Redis client, Pro status
+src/__tests__/      Vitest + Testing Library specs
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built by [Nicolás Miné](https://nicolas-developer.vercel.app).

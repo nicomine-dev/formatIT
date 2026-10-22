@@ -4,7 +4,7 @@ export const cv = {
   contact: {
     location: "Córdoba, Argentina",
     phone: "+54 351 6277572",
-    email: "mine.nicolas@gmail.com",
+    email: "mine.nicolas03@gmail.com",
     linkedin: "linkedin.com/in/nicolas-e-mine",
     github: "github.com/nicomine",
     portfolio: "Portfolio",
@@ -67,7 +67,9 @@ export const cv = {
   skills: {
     "Programming Languages": "JavaScript, TypeScript, Dart",
     Web: "HTML, CSS, Formik, MaterialUI, ReduxTK, ReactRouter, TypeScript, Flutter",
+    Backend: "Node.js, Express, REST APIs, Vercel Serverless Functions, Supabase, Zod, Vitest",
     Database: "SQL Server",
+    "Also Worked With": "Angular, AWS (academic projects)",
     "Agile Methodologies": "SCRUM",
     "AI Models": "Claude",
   },

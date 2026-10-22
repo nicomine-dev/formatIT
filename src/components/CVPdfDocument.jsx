@@ -337,7 +337,7 @@ export default function CVPdfDocument({ cv }) {
             {cv.education.map((ed, i) => (
               <View key={i} style={styles.entry}>
                 <Text style={styles.entryTitle}>
-                  {ed.degree} | {ed.start} – {ed.end}
+                  {ed.degree} | {[ed.start, ed.end].filter(Boolean).join(" – ")}
                 </Text>
                 <Bullet>{ed.institution}</Bullet>
               </View>
